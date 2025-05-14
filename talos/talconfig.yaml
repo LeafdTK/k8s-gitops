@@ -1,20 +1,41 @@
 ---
-clusterName: homelab
-talosVersion: v1.6.1
-kubernetesVersion: v1.29.0
+clusterName: leafycluster
 allowSchedulingOnControlPlanes: true
-endpoint: https://aeolus:6443
+endpoint: https://leafycluster:6443
 nodes:
-  - hostname: aeolus
-    ipAddress: aeolus
+  - hostname: leafycluster
+    extensionServices:
+      - name: tailscale
+        environment:
+          - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+          - TS_ROUTES=10.96.0.0/12
+          - TS_AUTH_ONCE=true
+    ipAddress: leafycluster
     controlPlane: true
     installDisk: /dev/nvme0n1
     schematic:
       customization:
         systemExtensions:
           officialExtensions:
-            - siderolabs/amdgpu-firmware
-            - siderolabs/intel-ucode
+            - siderolabs/iscsi-tools
             - siderolabs/tailscale
+            - siderolabs/util-linux-tools
+  - hostname: leafynode
+    extensionServices:
+      - name: tailscale
+        environment:
+          - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+          - TS_ROUTES=10.96.0.0/12
+          - TS_AUTH_ONCE=true
+    ipAddress: leafynode
+    controlPlane: false
+    installDisk: /dev/nvme0n1
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions: 
+            - siderolabs/iscsi-tools
+            - siderolabs/tailscale
+            - siderolabs/util-linux-tools
 patches:
-  - "@./patch-tailscale-underlay.yaml"
+  - "@./patch-longhorn.yaml"  

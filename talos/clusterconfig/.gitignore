@@ -1,2 +1,4 @@
 homelab-aeolus.yaml
 talosconfig
+leafycluster-leafycluster.yaml
+leafycluster-leafynode.yaml
