@@ -18,7 +18,10 @@ tasks:
       - kubectl create secret generic sops-age
         --namespace=flux-system
         --from-file=age.agekey={{.SOPS_AGE_KEY_FILE}}
-      - flux bootstrap git
-        --ssh-key-algorithm=ed25519
+      - flux bootstrap github
+        --token-auth
         --path=kubernetes
-        --url={{.GIT_URL}}
+        --owner=LeafdTK
+        --repository=k8s-gitops
+        --branch=main
+        --personal
