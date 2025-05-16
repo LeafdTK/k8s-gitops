@@ -1,0 +1,21 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: flux-source-controller
+rules:
+- apiGroups: ["source.toolkit.fluxcd.io"]
+  resources: ["helmcharts", "helmrepositories"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: flux-source-controller
+subjects:
+- kind: ServiceAccount
+  name: source-controller
+  namespace: flux-system
+roleRef:
+  kind: ClusterRole
+  name: flux-source-controller
+  apiGroup: rbac.authorization.k8s.io
