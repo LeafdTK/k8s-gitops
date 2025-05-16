@@ -1,0 +1,115 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ingress-values
+data:
+  values.yaml: |
+    nameOverride: prod
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: class
+                  operator: In
+                  values:
+                    - heavy
+    initContainers:
+      - name: dd-agent-dl
+        image: itzg/mc-proxy:java21-2025.1.0
+        command: ['bash', '-c', 'curl -sL https://dtdg.co/latest-java-tracer > /server/dd-java-agent.jar']
+        volumeMounts:
+          - name: datadir
+            mountPath: /server
+      - name: kubectl-dl
+        image: itzg/mc-proxy:java21-2025.1.0
+        command: ['bash', '-c', ' curl -sL "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" > /server/kubectl && chmod +x /server/kubectl']
+        volumeMounts:
+          - name: datadir
+            mountPath: /server
+    image: 
+      repository: itzg/mc-proxy
+      tag: java21-2025.1.0
+    persistence:
+      dataDir:
+        enabled: false
+    resources:
+      requests:
+        memory: 8Gi
+    strategyType: Recreate
+    extraEnv:
+      A_DD_SERVICE: ingress
+      A_VELOCITY_BUILD_ID: "479"
+      A_VELOCITY_VERSION: "3.4.0-SNAPSHOT"
+      VELOCITY_VERSION: "$(A_VELOCITY_VERSION)"
+      VELOCITY_BUILD_ID: "$(A_VELOCITY_BUILD_ID)"
+      GENERIC_PACKS: "https://marcusk-studio.github.io/modpacks/dimensions-proxy/pack.zip"
+      DD_ENV: prod
+      DD_VERSION: "$(A_VELOCITY_VERSION)#$(A_VELOCITY_BUILD_ID)"
+      DD_PROFILING_ENABLED: "true"
+      DD_LOGS_INJECTION: "true"
+      DD_APPSEC_ENABLED: "true"
+      DD_DYNAMIC_INSTRUMENTATION_ENABLED: "true"
+      DD_AGENT_HOST:
+        valueFrom:
+          fieldRef:
+            fieldPath: status.hostIP
+      DD_SERVICE: "$(A_DD_SERVICE)"
+      DD_TAGS: &tags "pod:$(A_DD_SERVICE)"
+      DD_DOGSTATSD_HOST: datadog.monitoring
+      DD_DOGSTATSD_TAGS: *tags
+      JMX_HOST:
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      JVM_XX_OPTS: >-
+        -XX:+UnlockExperimentalVMOptions
+        -XX:+UnlockDiagnosticVMOptions
+        -XX:+AlwaysActAsServerClassMachine
+        -XX:+AlwaysPreTouch
+        -XX:+DisableExplicitGC
+        -XX:+UseNUMA
+        -XX:NmethodSweepActivity=1
+        -XX:ReservedCodeCacheSize=400M
+        -XX:NonNMethodCodeHeapSize=12M
+        -XX:ProfiledCodeHeapSize=194M
+        -XX:NonProfiledCodeHeapSize=194M
+        -XX:-DontCompileHugeMethods
+        -XX:+PerfDisableSharedMem
+        -XX:+UseFastUnorderedTimeStamps
+        -XX:+UseCriticalJavaThreadPriority
+        -XX:+EagerJVMCI
+        -XX:+UseZGC
+        -XX:AllocatePrefetchStyle=1
+        -XX:-ZProactive
+        -XX:ConcGCThreads=8
+        -XX:FlightRecorderOptions=stackdepth=256
+        -javaagent:dd-java-agent.jar
+        -Dluckperms.data.mongodb-connection-uri=mongodb://mongodb-headless.default/luckperms?replicaset=rs0&retryWrites=true&w=majority
+        -Dluckperms.redis.address=redis-headless.default
+        -DREDIS_HOST=redis-master.default
+        -Dvelocity-lb.kubectl-cmd-b64=L3NlcnZlci9rdWJlY3RsIGdldCBwb2RzIC1uIG11bHRpcGFwZXIgLW89anNvbnBhdGg9IntyYW5nZSAuaXRlbXNbKl19ey5zdGF0dXMucG9kSVB9eycsJ317Lm1ldGFkYXRhLm5hbWV9eydcbid9e2VuZH0iIHwgZ3JlcCB3b3JrZXI=
+    extraVolumes:
+      - volumeMounts:
+          - name: velocity-config
+            mountPath: /server/velocity.toml
+            subPath: velocity.toml
+          - name: velocity-secret
+            mountPath: /server/forwarding.secret
+            subPath: forwarding.secret
+        volumes:
+          - name: velocity-config
+            configMap:
+              name: ingress-files
+          - name: velocity-secret
+            configMap:
+              name: ingress-files
+    minecraftProxy:
+      type: VELOCITY
+      serviceType: LoadBalancer
+      externalTrafficPolicy: Local
+      memory: 6G
+      jvmOpts: >-
+        --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+        -Dlog4j2.formatMsgNoLookups=true

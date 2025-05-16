@@ -1,0 +1,55 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: master
+spec:
+  interval: 30m
+  timeout: 15m
+  chart:
+    spec:
+      chart: minecraft-proxy
+      version: 3.8.3
+      sourceRef:
+        kind: HelmRepository
+        name: itzg
+        namespace: flux-system
+  maxHistory: 2
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  uninstall:
+    keepHistory: false
+  valuesFrom:
+    - name: master-values
+      kind: ConfigMap
+      valuesKey: values.yaml
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              version: v1
+              kind: Deployment
+              name: master-prod
+            patch: |
+              - op: add
+                path: /spec/template/spec/containers/0/command
+                value:
+                  - /usr/bin/run-bungeecord.sh
+              - op: add
+                path: /spec/template/spec/containers/0/args
+                value:
+                  - '35353'
+                  - '25577'
+              - op: replace
+                path: /spec/template/spec/containers/0/livenessProbe/tcpSocket/port
+                value: 35353
+              - op: replace
+                path: /spec/template/spec/containers/0/readinessProbe/tcpSocket/port
+                value: 35353

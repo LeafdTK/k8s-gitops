@@ -1,0 +1,124 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: master-values
+data:
+  values.yaml: |
+    nameOverride: prod
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: class
+                  operator: In
+                  values:
+                    - heavy
+    initContainers:
+      - name: dd-agent-dl
+        image: itzg/mc-proxy:java21-2025.1.0
+        command: ['bash', '-c', 'curl -sL https://dtdg.co/latest-java-tracer > /server/dd-java-agent.jar']
+        volumeMounts:
+          - name: datadir
+            mountPath: /server
+    image: 
+      repository: itzg/mc-proxy
+      tag: java21-2025.1.0
+    persistence:
+      storageClass: premium-rwo
+      dataDir:
+        enabled: true
+    resources:
+      requests:
+        memory: 3Gi
+    strategyType: Recreate
+    extraEnv:
+      DD_ENV: "prod"
+      A_VERSION: "1.20.1"
+      A_MP_BUILD: "56"
+      A_MP_VERSION: "2.12.3"
+      MP_BUILD: "$(A_MP_BUILD)"
+      MP_VERSION: "$(A_MP_VERSION)"
+      VERSION: "$(A_VERSION)"
+      DD_VERSION: "$(A_MP_VERSION)#$(A_MP_BUILD)"
+      DD_PROFILING_ENABLED: "true"
+      DD_LOGS_INJECTION: "true"
+      DD_APPSEC_ENABLED: "true"
+      DD_AGENT_HOST:
+        valueFrom:
+          fieldRef:
+            fieldPath: status.hostIP
+      A_DD_SERVICE: master
+      DD_SERVICE: "$(A_DD_SERVICE)"
+      DD_TAGS: &tags "pod:$(A_DD_SERVICE)"
+      DD_DOGSTATSD_HOST: datadog.monitoring
+      DD_DOGSTATSD_TAGS: *tags
+      JMX_HOST:
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      BUNGEE_JAR_URL: "https://api.multipaper.io/v2/projects/multipaper/versions/$(A_VERSION)/builds/$(A_MP_BUILD)/downloads/multipaper-master-$(A_MP_VERSION)-all.jar"
+      JVM_XX_OPTS: >-
+        -XX:+UnlockExperimentalVMOptions
+        -XX:+UnlockDiagnosticVMOptions
+        -XX:+AlwaysActAsServerClassMachine
+        -XX:+AlwaysPreTouch
+        -XX:+DisableExplicitGC
+        -XX:+UseNUMA
+        -XX:NmethodSweepActivity=1
+        -XX:ReservedCodeCacheSize=400M
+        -XX:NonNMethodCodeHeapSize=12M
+        -XX:ProfiledCodeHeapSize=194M
+        -XX:NonProfiledCodeHeapSize=194M
+        -XX:-DontCompileHugeMethods
+        -XX:+PerfDisableSharedMem
+        -XX:+UseFastUnorderedTimeStamps
+        -XX:+UseCriticalJavaThreadPriority
+        -XX:+EagerJVMCI
+        -XX:+UseZGC
+        -XX:AllocatePrefetchStyle=1
+        -XX:-ZProactive
+        -XX:ConcGCThreads=8
+        -XX:FlightRecorderOptions=stackdepth=256
+        -javaagent:dd-java-agent.jar
+    minecraftProxy:
+      type: BUNGEECORD
+      memory: 2G
+      jvmOpts: >-
+        --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+        -Dlog4j2.formatMsgNoLookups=true
+      extraPorts:
+        - name: prometheus
+          containerPort: 9100
+          service:
+            enabled: true
+            port: 9100
+            type: ClusterIP
+          ingress:
+            enabled: false
+        - name: multipaper
+          containerPort: 35353
+          service:
+            enabled: true
+            port: 35353
+            type: ClusterIP
+          ingress:
+            enabled: false
+        - name: trace
+          containerPort: 8126
+          service:
+            enabled: true
+            port: 8126
+            type: ClusterIP
+          ingress:
+            enabled: false
+        - name: stats
+          containerPort: 8125
+          service:
+            enabled: true
+            port: 8125
+            protocol: UDP
+            type: ClusterIP
+          ingress:
+            enabled: false
