@@ -31,7 +31,7 @@ data:
         enabled: true
     resources:
       requests:
-        memory: 3Gi
+        memory: 5Gi
     strategyType: Recreate
     extraEnv:
       DD_ENV: "prod"
