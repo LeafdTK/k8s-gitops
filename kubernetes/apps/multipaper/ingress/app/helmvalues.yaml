@@ -108,6 +108,8 @@ data:
     minecraftProxy:
       type: VELOCITY
       serviceType: LoadBalancer
+      annotations:
+        kube-vip.io/loadbalancerIPs: "162.19.84.100"
       externalTrafficPolicy: Local
       memory: 6G
       jvmOpts: >-

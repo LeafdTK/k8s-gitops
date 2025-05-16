@@ -20,5 +20,5 @@ data:
       extraFlags: "--max_connections=500"
       persistence:
         enabled: true
-        storageClass: premium-rwo
+        storageClass: longhorn
         size: 8Gi

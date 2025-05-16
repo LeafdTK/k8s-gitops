@@ -24,7 +24,7 @@ data:
       databases:
         - luckperms
     persistence:
-      storageClass: premium-rwo
+      storageClass: longhorn
     replicaCount: 3
     topologySpreadConstraints:
       - maxSkew: 1
