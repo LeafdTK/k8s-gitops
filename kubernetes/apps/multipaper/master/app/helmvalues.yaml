@@ -26,7 +26,7 @@ data:
       repository: itzg/mc-proxy
       tag: java21-2025.1.0
     persistence:
-      storageClass: premium-rwo
+      storageClass: longhorn
       dataDir:
         enabled: true
     resources:
