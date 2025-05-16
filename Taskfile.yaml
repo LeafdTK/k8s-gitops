@@ -2,9 +2,9 @@ version: "3"
 dotenv: ["workstation.env"]
 
 env:
-  GIT_EMAIL: cjshearer@live.com
+  GIT_EMAIL: hi@leafd.tech
   GIT_REPO_NAME: k8s-gitops
-  GIT_URL: ssh://git@github.com/cjshearer/{{.GIT_REPO_NAME}}.git
+  GIT_URL: ssh://git@github.com/LeafdTK/{{.GIT_REPO_NAME}}.git
   KUBERNETES_DIR: "{{.ROOT_DIR}}/kubernetes"
   KUBECONFIG: "{{.KUBERNETES_DIR}}/kubeconfig"
   FLUX_DIR: "{{.KUBERNETES_DIR}}/flux-system"

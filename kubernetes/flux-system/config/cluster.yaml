@@ -8,7 +8,7 @@ spec:
   interval: 30m
   ref:
     branch: main
-  url: "ssh://git@github.com/LeafdTK/k8s-gitops.git"
+  url: "ssh://git@github.com/marcusk-studio/gitops"
   ignore: |
     # exclude all
     /*

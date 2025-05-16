@@ -1,16 +1,17 @@
 ---
 clusterName: leafycluster
+talosVersion: v1.9.6
 allowSchedulingOnControlPlanes: true
-endpoint: https://leafycluster:6443
+endpoint: https://leafyplane:6443
 nodes:
-  - hostname: leafycluster
+  - hostname: leafyplane
     extensionServices:
       - name: tailscale
         environment:
           - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
           - TS_ROUTES=10.96.0.0/12
           - TS_AUTH_ONCE=true
-    ipAddress: leafycluster
+    ipAddress: leafyplane
     controlPlane: true
     installDisk: /dev/nvme0n1
     schematic:
@@ -39,3 +40,4 @@ nodes:
             - siderolabs/util-linux-tools
 patches:
   - "@./patch-longhorn.yaml"  
+  - "@./patch-cilium.yaml"  
