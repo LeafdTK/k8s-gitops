@@ -5,6 +5,3 @@ kind: Kustomization
 namespace: kube-system
 resources:
   - ./cilium/ks.yaml
-  - ./descheduler/ks.yaml
-  - ./metrics-server/ks.yaml
-  - ./reloader/ks.yaml
