@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datadog-values
+data:
+  values.yaml: |
+    agents:
+      image:
+        name: agent
+        tag: 7.49.1-linux-jmx
+      tolerations:
+        - effect: PreferNoSchedule
+          key: class
+          operator: Exists
+    datadog:
+      apiKey: 9bf3c14edb44df814aabeac2c8466441
+      appKey: bde418f7874bd4d1c17415c56340c4b4f4b81fa7
+      apm:
+        enabled: true
+        portEnabled: true
+      clusterAgent:
+        metricsProvider:
+          enabled: true
+      clusterName: mk
+      confd:
+        openmetrics.yaml: |-
+          ad_identifiers:
+            - minecraft-server
+          instances:
+            - openmetrics_endpoint: "http://%%host%%:9225/metrics"
+              namespace: minecraft
+              metrics:
+                - ^mc_.+
+            - openmetrics_endpoint: "http://%%host%%:19565"
+              namespace: minecraft
+              metrics:
+                - ^.+
+        jmx.yaml: |-
+          ad_identifiers:
+            - minecraft-server
+          init_config:
+            is_jmx: true
+            collect_default_metrics: true
+          instances:
+            - host: "%%host%%"
+              port: "7091"
+      logs:
+        enabled: true
+        containerCollectAll: true
+        autoMultiLineDetection: true
+      processAgent:
+        processCollection: true
+      prometheusScrape:
+        enabled: true
+      providers:
+        gke:
+          cos: true
+      sbom:
+        containerImage:
+          enabled: true
+        host:
+          enabled: true
+      securityAgent:
+        compliance:
+          enabled: true
+          host_benchmarks:
+            enabled: false
+        securityProfile:
+          enabled: false
+      site: datadoghq.eu
