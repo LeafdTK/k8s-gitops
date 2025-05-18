@@ -1,0 +1,27 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/helmfile
+
+helmDefaults:
+  cleanupOnFail: true
+  wait: true
+  waitForJobs: true
+
+releases:
+  - name: external-secrets
+    namespace: external-secrets
+    chart: oci://ghcr.io/external-secrets/charts/external-secrets
+    version: 0.17.0
+    values: ['../kubernetes/apps/external-secrets/external-secrets/app/helm/values.yaml']
+    hooks:
+      - # Apply cluster secret store
+        events: ['postsync']
+        command: kubectl
+        args:
+          - apply
+          - --namespace=external-secrets
+          - --server-side
+          - --field-manager=kustomize-controller
+          - --filename
+          - ../kubernetes/apps/external-secrets/external-secrets/app/clustersecretstore.yaml
+          - --wait=true
+        showlogs: true
